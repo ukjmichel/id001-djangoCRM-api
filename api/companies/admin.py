@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db import transaction
-from .models import Company, Contact
+from .models import Company
 
 
 @admin.register(Company)
@@ -36,6 +36,9 @@ class CompanyAdmin(admin.ModelAdmin):
 
             # Check if company_id was changed
             if old_company_id != new_company_id:
+                # Import Contact here to avoid circular import
+                from contacts.models import Contact
+
                 with transaction.atomic():
                     # Update all related contacts to use the new company_id
                     Contact.objects.filter(company_id=old_company_id).update(
@@ -50,27 +53,3 @@ class CompanyAdmin(admin.ModelAdmin):
         else:
             # This is a new company, save normally
             super().save_model(request, obj, form, change)
-
-
-@admin.register(Contact)
-class ContactAdmin(admin.ModelAdmin):
-    """Admin configuration for Contact model"""
-
-    list_display = ('first_name', 'last_name', 'email', 'company', 'position', 'created_at')
-    list_filter = ('created_at', 'updated_at', 'company')
-    search_fields = ('first_name', 'last_name', 'email', 'company__name', 'company__company_id')
-    readonly_fields = ('created_at', 'updated_at')
-    autocomplete_fields = ('company',)
-
-    fieldsets = (
-        ('Contact Information', {
-            'fields': ('first_name', 'last_name', 'email', 'phone', 'position')
-        }),
-        ('Company', {
-            'fields': ('company',)
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )

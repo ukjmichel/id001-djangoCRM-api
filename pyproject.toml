@@ -1,0 +1,131 @@
+[project]
+name = "id001-djangocrm"
+version = "0.1.0"
+description = "Django CRM with DRF"
+requires-python = ">=3.11"
+dependencies = [
+    "django>=5.0",
+    "djangorestframework>=3.14",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pre-commit>=3.5.0",
+]
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*/migrations/*",
+    "staticfiles",
+    "media",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "DJ",  # flake8-django
+    "N",   # pep8-naming
+    "S",   # flake8-bandit (security)
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "S101",   # use of assert (fine in tests)
+    "DJ001",  # avoid using null=True on string-based fields (personal preference)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"*/migrations/*.py" = ["E501", "DJ", "N806"]
+"*/tests/*.py" = ["S101", "S106"]
+"*/test_*.py" = ["S101", "S106"]
+"manage.py" = ["E402"]
+"settings.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["api"]
+section-order = ["future", "standard-library", "django", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+django = ["django"]
+
+# Bandit configuration (security)
+[tool.bandit]
+exclude_dirs = ["tests", "*/migrations/*", "*/test_*.py"]
+skips = ["B101", "B601"]  # B101: assert_used, B601: paramiko_calls
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.11"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Set to true for stricter checking
+ignore_missing_imports = true  # Set to false when you have all stubs
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_optional = true
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "*.tests.*"
+ignore_errors = true
+
+[tool.django-stubs]
+django_settings_module = "api.api.settings"  # Nested api folder structure
+
+# Coverage configuration (if you use pytest-cov)
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "manage.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Pytest configuration (if you use pytest)
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "api.api.settings"  # Nested api folder structure
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--showlocals",
+]
+testpaths = ["tests"]

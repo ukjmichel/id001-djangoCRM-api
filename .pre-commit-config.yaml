@@ -1,0 +1,139 @@
+# Pre-commit hooks for Django + DRF project
+# See https://pre-commit.com for more information
+# Installation: pip install pre-commit (or uv pip install pre-commit)
+# Setup: pre-commit install
+
+default_language_version:
+  python: python3.12  # Adjust to your Python version
+
+repos:
+  # General file checks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: trailing-whitespace
+    args: [--markdown-linebreak-ext=md]
+  - id: end-of-file-fixer
+  - id: check-yaml
+  - id: check-json
+  - id: check-toml
+  - id: check-added-large-files
+    args: [--maxkb=1000]
+  - id: check-merge-conflict
+  - id: check-case-conflict
+  - id: detect-private-key
+  - id: debug-statements
+  - id: mixed-line-ending
+    args: [--fix=lf]
+
+  # Python code formatting with Ruff (faster alternative to black + isort + flake8)
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.8.2
+  hooks:
+      # Run the linter
+  - id: ruff
+    args: [--fix, --exit-non-zero-on-fix]
+      # Run the formatter
+  - id: ruff-format
+
+  # Django-specific checks
+- repo: https://github.com/rtts/djhtml
+  rev: 3.0.6
+  hooks:
+  - id: djhtml
+    args: [--tabwidth=2]
+  - id: djcss
+  - id: djjs
+
+  # Security checks
+- repo: https://github.com/PyCQA/bandit
+  rev: 1.7.10
+  hooks:
+  - id: bandit
+    args: [-c, pyproject.toml]
+    additional_dependencies: ['bandit[toml]']
+    exclude: ^tests/
+
+  # Type checking with mypy (disabled - needs PYTHONPATH configuration)
+  # To enable: uncomment below and ensure your project structure is in PYTHONPATH
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.13.0
+  #   hooks:
+  #     - id: mypy
+  #       additional_dependencies:
+  #         - django-stubs
+  #         - djangorestframework-stubs
+  #         - types-requests
+  #       args: [--config-file=pyproject.toml]
+  #       exclude: ^(migrations/|tests/)
+
+  # Check for common Django mistakes
+- repo: https://github.com/adamchainz/django-upgrade
+  rev: 1.22.2
+  hooks:
+  - id: django-upgrade
+    args: [--target-version, '5.0']      # Adjust to your Django version
+
+  # YAML formatting
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.14.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+
+  # Markdown formatting
+- repo: https://github.com/executablebooks/mdformat
+  rev: 0.7.21
+  hooks:
+  - id: mdformat
+    additional_dependencies:
+    - mdformat-gfm
+    - mdformat-black
+
+  # Additional Python checks
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.19.0
+  hooks:
+  - id: pyupgrade
+    args: [--py311-plus]      # Adjust to your minimum Python version
+
+# Optional: Configure ruff in pyproject.toml
+# Example configuration to add to your pyproject.toml:
+#
+# [tool.ruff]
+# target-version = "py311"
+# line-length = 88
+# select = [
+#     "E",  # pycodestyle errors
+#     "W",  # pycodestyle warnings
+#     "F",  # pyflakes
+#     "I",  # isort
+#     "B",  # flake8-bugbear
+#     "C4", # flake8-comprehensions
+#     "UP", # pyupgrade
+#     "DJ", # flake8-django
+# ]
+# ignore = ["E501"]  # line too long (handled by formatter)
+#
+# [tool.ruff.per-file-ignores]
+# "__init__.py" = ["F401"]
+# "*/migrations/*.py" = ["E501", "DJ"]
+#
+# [tool.bandit]
+# exclude_dirs = ["tests", "*/migrations/*"]
+# skips = ["B101"]  # Skip assert_used check
+#
+# [tool.mypy]
+# python_version = "3.11"
+# plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+# strict = true
+# warn_unused_configs = true
+# disallow_untyped_defs = true
+# ignore_missing_imports = false
+#
+# [[tool.mypy.overrides]]
+# module = "*.migrations.*"
+# ignore_errors = true
+#
+# [tool.django-stubs]
+# django_settings_module = "your_project.settings"
